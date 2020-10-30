@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::net::UdpSocket;
+use std::net::TcpStream;
 use std::path::Path;
 
 fn main() {
@@ -16,14 +16,9 @@ fn main() {
         std::process::exit(25);
     }
 
-    let local = "127.0.0.1:10101";
-
-    let socket = UdpSocket::bind(local).expect("Failed to bind ip");
-    println!("[+] Successfully binded to {}", local);
-
-    socket
-        .connect(&args[2].trim())
+    let mut stream = TcpStream::connect(&args[2].trim())
         .expect("Cannot connect to ip. Verify if the server is installed on the target machine");
+
     println!("[+] Successfully connected to {}", &args[2]);
 
     let mut content = Vec::new();
@@ -38,8 +33,8 @@ fn main() {
         &content.len()
     );
 
-    socket
-        .send(header.as_bytes())
+    stream
+        .write(header.as_bytes())
         .expect("Failed to send header");
     println!("[+] Header sent sucessfully");
 
@@ -49,11 +44,11 @@ fn main() {
         let mut buf: [u8; 4096] = [0; 4096];
         if counter + 4096 < content.len() {
             buf.copy_from_slice(&content[counter..counter + 4096]);
-            socket.send(&buf).expect("Failed to send part of file");
+            stream.write(&buf).expect("Failed to send part of file");
             counter += 4096;
         } else {
-            socket
-                .send(&content[counter..content.len()])
+            stream
+                .write(&content[counter..content.len()])
                 .expect("Failed to send part of file");
             break;
         }
