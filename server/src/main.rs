@@ -41,20 +41,18 @@ fn main() {
                     let size = n.as_u64().unwrap_or(0);
                     let mut bytes_received = 0usize;
 
-                    let mut content: Vec<u8> = Vec::new();
-
                     while bytes_received < size as usize {
                         let mut tempbuf = [0; BUFSIZE];
                         let b_amount = stream.read(&mut tempbuf).expect("Failed to receive bytes");
 
+                        let mut current: Vec<u8> = vec![];
                         for e in &tempbuf[..b_amount] {
-                            content.push(*e);
+                            current.push(*e);
                         }
 
                         bytes_received += b_amount;
+                        f.write(current.as_slice()).unwrap();
                     }
-                    f.write_all(content.as_slice())
-                        .expect("Failed to write in file");
                 } else {
                     continue;
                 }
