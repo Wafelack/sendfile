@@ -27,9 +27,8 @@ fn main() {
 
             if let Value::String(s) = &v["name"] {
                 if let Value::Number(n) = &v["size"] {
-                    let mut path =
+                    let path =
                         Path::new(Path::new(&s).file_name().unwrap_or(OsStr::new("temp.txt")));
-                    let mut i = 1usize;
 
                     if path.exists() {
                         match remove_file(path) {
