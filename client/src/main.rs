@@ -30,10 +30,16 @@ fn main() {
     let len = std::fs::metadata(&args[1]).unwrap().len() as usize;
 
     let header = format!(
-        "{{\"name\" : \"{}\",\n\"size\" : {} }}",
+        "{};{}",
         &args[1],
         std::fs::metadata(&args[1]).unwrap().len()
     );
+
+    let header_size = header.as_bytes().len().to_be_bytes();
+
+    stream
+        .write(&header_size)
+        .expect("Failed to send header size");
 
     stream
         .write(header.as_bytes())
