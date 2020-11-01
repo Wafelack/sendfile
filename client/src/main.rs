@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::{BufRead, BufReader, Read};
 use std::net::TcpStream;
 use std::path::Path;
 
@@ -23,16 +24,15 @@ fn main() {
 
     println!("[+] Successfully connected to {}", &args[2]);
 
-    let mut content = Vec::new();
-    File::open(&args[1])
-        .expect("Failed to open file")
-        .read_to_end(&mut content)
-        .expect("Failed to convert to string");
+    let f = File::open(&args[1]).expect("Failed to open file");
+
+    let mut reader = BufReader::with_capacity(BUFSIZE, f);
+    let len = std::fs::metadata(&args[1]).unwrap().len() as usize;
 
     let header = format!(
         "{{\"name\" : \"{}\",\n\"size\" : {} }}",
         &args[1],
-        &content.len()
+        std::fs::metadata(&args[1]).unwrap().len()
     );
 
     stream
@@ -43,8 +43,21 @@ fn main() {
     let mut counter = 0usize;
 
     loop {
-        let mut buf: [u8; BUFSIZE] = [0; BUFSIZE];
-        if counter + BUFSIZE < content.len() {
+        let buf = reader.fill_buf().unwrap();
+
+        if buf.is_empty() {
+            break;
+        }
+        if counter >= len {
+            break;
+        }
+        let size = stream.write(buf).unwrap();
+
+        reader.consume(size);
+
+        counter += size;
+        /*
+        if counter + BUFSIZE < len {
             buf.copy_from_slice(&content[counter..counter + BUFSIZE]);
             stream.write(&buf).expect("Failed to send part of file");
             counter += BUFSIZE;
@@ -53,7 +66,7 @@ fn main() {
                 .write(&content[counter..content.len()])
                 .expect("Failed to send part of file");
             break;
-        }
+        }*/
     }
     println!("[+] File sent successfully !");
 }

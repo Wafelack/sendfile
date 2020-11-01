@@ -36,7 +36,6 @@ fn main() {
                             Err(_e) => break,
                         }
                     }
-
                     let mut f = File::create(path).expect("Failed to create file");
 
                     let size = n.as_u64().unwrap_or(0);
