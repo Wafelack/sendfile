@@ -6,6 +6,8 @@ use std::path::Path;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+    const BUFSIZE: usize = 4096;
+
     if args.len() != 3 {
         println!("Usage : filet <filename> <dest>");
         std::process::exit(65);
@@ -41,11 +43,11 @@ fn main() {
     let mut counter = 0usize;
 
     loop {
-        let mut buf: [u8; 4096] = [0; 4096];
-        if counter + 4096 < content.len() {
-            buf.copy_from_slice(&content[counter..counter + 4096]);
+        let mut buf: [u8; BUFSIZE] = [0; BUFSIZE];
+        if counter + BUFSIZE < content.len() {
+            buf.copy_from_slice(&content[counter..counter + BUFSIZE]);
             stream.write(&buf).expect("Failed to send part of file");
-            counter += 4096;
+            counter += BUFSIZE;
         } else {
             stream
                 .write(&content[counter..content.len()])
