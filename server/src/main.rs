@@ -1,8 +1,11 @@
 use serde_json::*;
+use std::ffi::OsStr;
+use std::fs::remove_file;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Write;
 use std::net::TcpListener;
+use std::path::Path;
 
 fn main() {
     let localaddr = "0.0.0.0:25368";
@@ -24,7 +27,18 @@ fn main() {
 
             if let Value::String(s) = &v["name"] {
                 if let Value::Number(n) = &v["size"] {
-                    let mut f = File::create(s).expect("Failed to create file");
+                    let mut path =
+                        Path::new(Path::new(&s).file_name().unwrap_or(OsStr::new("temp.txt")));
+                    let mut i = 1usize;
+
+                    if path.exists() {
+                        match remove_file(path) {
+                            Ok(_) => (),
+                            Err(_e) => break,
+                        }
+                    }
+
+                    let mut f = File::create(path).expect("Failed to create file");
 
                     let size = n.as_u64().unwrap_or(0);
                     let mut bytes_received = 0usize;
